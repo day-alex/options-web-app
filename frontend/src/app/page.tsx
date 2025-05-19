@@ -18,16 +18,20 @@ export default function Home() {
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Black Scholes Pricer</h1>
-      
+      <h1 className="text-2xl font-bold mb-6 text-center">Black Scholes Pricer</h1>
       <div className="md:flex md:gap-8">
         <div className="md:w-1/2">
-          <h2 className="text-xl mb-4">Enter option data:</h2>
-          <OptionsInputForm onSubmitSuccess={handleFormSubmitSuccess} />
+          <div className="w-full">
+            <h2 className="text-xl mb-4">Enter option data:</h2>
+            <OptionsInputForm onSubmitSuccess={handleFormSubmitSuccess} />
+          </div>
         </div>
         
         <div className="md:w-1/2 mt-8 md:mt-0">
-          <OutputBox response={serverResponse} />
+          <h2 className="text-xl mb-4 border-b-4 border-indigo-500">Server Responses</h2>
+          <div className="w-full">
+            <OutputBox response={serverResponse} />
+          </div>
         </div>
       </div>
     </div>
