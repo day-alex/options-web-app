@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { optionsService } from '../services/optionsService';
 import { OptionInputData } from '../models/optionTypes';
 
+
 export class OptionsController {
   public async calculateOptions(req: Request, res: Response): Promise<void> {
     try {
@@ -17,14 +18,20 @@ export class OptionsController {
       }
       
       // Process data using service
-      const result = optionsService.calculateOptionPrices(inputData);
+      const result = await optionsService.calculateOptionPrices(inputData);
       
       // Send successful response
       res.status(200).json({
-        success: true,
-        message: 'Options calculated successfully',
-        data: result
-      });
+      success: true,
+      message: 'Options calculated successfully',
+      data: {
+        results: {
+          callPrice: result.c,
+          putPrice: result.p
+        },
+        input: inputData
+      }
+    });
       
     } catch (error) {
       console.error('Error calculating options:', error);
