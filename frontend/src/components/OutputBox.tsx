@@ -12,34 +12,39 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
     if (!response) return null;
 
     return (
-        <div className="mt-8 p-4 bg-black border rounded max-w-md">
-            <h2 className="text-xl font-bold mb-2">Server Response</h2>
-            
+        <div className="mt-8 p-4 bg-black border border-gray-400 rounded">
             {response.success ? (
-                <div>
-                    <p className="font-semibold">Call Price: {response.data.results.callPrice}</p>
-                    <p className="font-semibold">Put Price: {response.data.results.putPrice}</p>
-                    
-                    {/* Display any additional data from the server */}
-                    {response.data.input && (
-                        <div className="mt-2">
-                        <h3 className="font-medium">Submitted Data:</h3>
-                        <pre className="bg-black border-4 border-white-500 p-2 rounded mt-1 overflow-auto">
-                            {JSON.stringify(response.data.input, null, 2)}
-                        </pre>
-                        </div>
-                    )}
+                <div className="flex flex-row border border-white divide-x divide-white rounded overflow-hidden">
+                    <div className="w-1/3 p-4">
+                        <h2 className="text-white font-semibold mb-2">Parameters</h2>
+                        <ul className="text-sm text-white space-y-1">
+                            <li>Spot Price: {response.data.input.spot}</li>
+                            <li>Strike Price: {response.data.input.strike}</li>
+                            <li>Exp (years): {response.data.input.exp}</li>
+                            <li>Risk Free Rate: {response.data.input.rate}</li>
+                            <li>Volatility: {response.data.input.vol}</li>
+                        </ul>
+                    </div>
+                    <div className="w-1/3 p-2 text-white text-center">
+                        <h2 className="text-green-400 font-semibold my-2">Call</h2>
+                        <p id="callPrice" className="text-xl font-bold">{response.data.results.callPrice.toFixed(4)}</p>
+                    </div>
+                    <div className="w-1/3 p-2 text-white text-center">
+                        <h2 className="text-red-400 font-semibold my-2">Put</h2>
+                        <p id="putPrice" className="text-xl font-bold">{response.data.results.putPrice.toFixed(4)}</p>
+                    </div>
                 </div>
             ) : (
                 <div className="text-red-600">
                     <p className="font-semibold">Error: {response.message}</p>
                 </div>
             )}
-            <p className="text-gray-500 text-sm mt-4">
+            <p className="text-gray-400 text-xs mt-4">
                 Response received at: {new Date().toLocaleTimeString()}
             </p>
         </div>
     );
-}
+};
+
 
 export default OutputBox;

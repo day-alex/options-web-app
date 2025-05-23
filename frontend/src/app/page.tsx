@@ -10,10 +10,10 @@ interface ServerResponse {
 }
 
 export default function Home() {
-  const[serverResponse, setServerResponse] = useState<ServerResponse | null>(null);
+  const[serverResponses, setServerResponses] = useState<ServerResponse[]>([]);
 
   const handleFormSubmitSuccess = (data: ServerResponse) => {
-    setServerResponse(data);
+    setServerResponses((prevResponses) => [...prevResponses, data]);
   }
 
   return (
@@ -29,8 +29,10 @@ export default function Home() {
         
         <div className="md:w-1/2 mt-8 md:mt-0">
           <h2 className="text-xl mb-4 border-b-4 border-indigo-500">Server Responses</h2>
-          <div className="w-full">
-            <OutputBox response={serverResponse} />
+          <div className="w-full space-y-4">
+            {serverResponses.map((response, index) => (
+              <OutputBox key={index} response={response} />
+            ))}
           </div>
         </div>
       </div>
