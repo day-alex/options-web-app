@@ -18,8 +18,9 @@ export class OptionsController {
       }
       
       // Process data using service
-      const result = await optionsService.calculateOptionPrices(inputData);
-      
+      // const result = await optionsService.calculateOptionPrices(inputData);
+      const result = optionsService.calculateLocally(inputData);
+
       // Send successful response
       res.status(200).json({
       success: true,
