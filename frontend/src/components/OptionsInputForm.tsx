@@ -13,6 +13,7 @@ interface OptionsInputFormProps {
 }
 
 const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) => {
+  const [ticker, setTicker] = useState<string>('');
   const [formData, setFormData] = useState<OptionsInputFormData>({
     spot: '',
     strike: '',
@@ -45,7 +46,8 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
       if (response.ok) {
         setStatus('success');
         setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
-        onSubmitSuccess(data);
+        onSubmitSuccess({...data, ticker });
+        setTicker('');
       } else {
         setStatus('error');
       }
@@ -60,7 +62,19 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     <form onSubmit={handleSubmit} className="max-w-md">
       {status === 'success' && <p className="text-green-600 mb-4">Form submitted successfully!</p>}
       {status === 'error' && <p className="text-red-600 mb-4">Failed to submit form. Please try again.</p>}
-      
+      <div className="mb-4">
+        <label htmlFor="tick" className="block mb-1">Ticker</label>
+        <input
+          type="text"
+          id="tick"
+          name="tick"
+          value={ticker}
+          onChange={(e) => setTicker(e.target.value)}
+          className="w-full border p-2 rounded"
+          required
+        />
+      </div>
+
       <div className="mb-4">
         <label htmlFor="spot" className="block mb-1">Spot Price</label>
         <input

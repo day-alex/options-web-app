@@ -7,6 +7,7 @@ interface ServerResponse {
     success: boolean;
     message: string;
     data ?: any;
+    ticker: string;
 }
 
 export default function Home() {

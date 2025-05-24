@@ -2,6 +2,7 @@ interface ServerResponse {
     success: boolean;
     message: string;
     data ?: any;
+    ticker: string;
 }
 
 interface OutputBoxProps {
@@ -12,7 +13,13 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
     if (!response) return null;
 
     return (
-        <div className="mt-8 p-4 bg-black border border-gray-400 rounded">
+        <div className="mt-8 p-2 bg-black border border-gray-400 rounded">
+            <div className="flex flex-row items-center gap-1 mb-2">
+                <h2>{response.ticker}</h2>
+                <p className="text-gray-400 text-xs">
+                    @ {new Date().toLocaleTimeString()}
+                </p>
+            </div>
             {response.success ? (
                 <div className="flex flex-row border border-white divide-x divide-white rounded overflow-hidden">
                     <div className="w-1/3 p-4">
@@ -39,9 +46,6 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
                     <p className="font-semibold">Error: {response.message}</p>
                 </div>
             )}
-            <p className="text-gray-400 text-xs mt-4">
-                Response received at: {new Date().toLocaleTimeString()}
-            </p>
         </div>
     );
 };
