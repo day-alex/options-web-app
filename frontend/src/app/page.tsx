@@ -21,9 +21,9 @@ export default function Home() {
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6 text-center">Black Scholes Pricer</h1>
       <div className="md:flex md:gap-8">
-        <div className="md:w-1/2">
-          <div className="w-full">
-            <h2 className="text-xl mb-4">Enter option data:</h2>
+        <div className="md:w-1/2 flex justify-center">
+          <div className="w-full max-w-md">
+            <h2 className="text-xl mb-4">Enter option parameters</h2>
             <OptionsInputForm onSubmitSuccess={handleFormSubmitSuccess} />
           </div>
         </div>

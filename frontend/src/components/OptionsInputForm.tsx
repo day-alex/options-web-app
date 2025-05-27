@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 interface OptionsInputFormData {
   spot: string;
@@ -18,15 +18,22 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     spot: '',
     strike: '',
     exp: '',
-    rate: '',
+    rate: '0.045',
     vol: ''
   });
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [status, setStatus] = useState<string | null>(null);
+  const [optionExpirations, setOptionExpirations] = useState<string[]>([]);
+  const [optionStrikes, setOptionStrikes] = useState<string[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+
+    if (name === 'exp') {
+      getTickerStrikes(value);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -34,19 +41,18 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     setIsSubmitting(true);
     
     try {
-      // Replace with your Express endpoint URL
-      const response = await fetch('http://localhost:3001/api/submit', {
+      const grpcResponse = await fetch('http://localhost:3001/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData)
       });
 
-      const data = await response.json();
+      const grpcData = await grpcResponse.json();
 
-      if (response.ok) {
+      if (grpcResponse.ok) {
         setStatus('success');
         setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
-        onSubmitSuccess({...data, ticker });
+        onSubmitSuccess({...grpcData, ticker });
         setTicker('');
       } else {
         setStatus('error');
@@ -58,6 +64,43 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     }
   };
 
+  const getTickerExpirations = async () => {
+    try {
+      const params = new URLSearchParams({ ticker });
+
+      const response = await fetch(`http://localhost:3001/api/options/ticker?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const responseData = await response.json();
+
+      if (Array.isArray(responseData.data.expirationDates)) {
+        setOptionExpirations(responseData.data.expirationDates);
+      }
+
+    } catch (error) {
+      console.error('Error fetching ticker data:', error);
+    }
+  };
+
+  const getTickerStrikes = async (expiration: string) => {
+    try {
+      const params = new URLSearchParams({ ticker, expiration });
+
+      const response = await fetch(`http://localhost:3001/api/options/ticker?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const responseData = await response.json();
+      setOptionStrikes(responseData.data.strikes);
+
+    } catch (error) {
+      console.error('Error fetching ticker data:', error);
+    }
+  }
+  
   return (
     <form onSubmit={handleSubmit} className="max-w-md">
       {status === 'success' && <p className="text-green-600 mb-4">Form submitted successfully!</p>}
@@ -74,6 +117,9 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
+      <button className='bg-blue-500 text-white py-2 px-4 rounded mb-2' type='button' onClick={getTickerExpirations}>
+        Load Ticker Data
+      </button>
 
       <div className="mb-4">
         <label htmlFor="spot" className="block mb-1">Spot Price</label>
@@ -87,31 +133,45 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
-      
+    
       <div className="mb-4">
-        <label htmlFor="strike" className="block mb-1">Strike Price</label>
-        <input
-          type="text"
-          id="strike"
-          name="strike"
-          value={formData.strike}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-      </div>
-      
-      <div className="mb-4">
-        <label htmlFor="exp" className="block mb-1">Time to Expiration</label>
-        <input
-          type="text"
+        <label htmlFor="exp" className="block mb-1">Expiration</label>
+        <select
           id="exp"
           name="exp"
           value={formData.exp}
           onChange={handleChange}
           className="w-full border p-2 rounded"
-        />
+          disabled={optionExpirations.length === 0}
+        >
+          <option value="">Select an expiration</option>
+          {optionExpirations?.map((exp: string) => (
+            <option key={exp} value={exp}>
+              {exp}
+            </option>
+          ))}
+        </select>
       </div>
+
+      <div className="mb-4">
+        <label htmlFor="strike" className="block mb-1">Strike Price</label>
+        <select
+          id="strike"
+          name="strike"
+          value={formData.strike}
+          onChange={handleChange}
+          className="w-full border p-2 rounded"
+          disabled={!optionStrikes || optionStrikes.length === 0}
+        >
+          <option value="">Select a strike</option>
+          {optionStrikes?.map((strike: string) => (
+            <option key={strike} value={strike}>
+              {strike}
+            </option>
+          ))}
+        </select>
+      </div>
+      
       
       <div className="mb-4">
         <label htmlFor="rate" className="block mb-1">Risk-free Interest Rate</label>

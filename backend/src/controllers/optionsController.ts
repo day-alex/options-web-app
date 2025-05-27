@@ -1,10 +1,11 @@
 import { Request, Response } from 'express';
 import { optionsService } from '../services/optionsService';
 import { OptionInputData } from '../models/optionTypes';
-
+import { DateTime } from 'luxon'; 
+import yahooFinance from 'yahoo-finance2';
 
 export class OptionsController {
-  public async calculateOptions(req: Request, res: Response): Promise<void> {
+  public calculateOptions = async (req: Request, res: Response): Promise<void> => {
     try {
       // Validate input
       const inputData = req.body as OptionInputData;
@@ -41,6 +42,49 @@ export class OptionsController {
       });
     }
   }
+
+  public yfOption = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const { ticker, date } = req.query;
+
+      if (typeof ticker !== 'string' || !ticker.trim()) {
+        res.status(400).json({ success: false, message: 'Invalid ticker symbol' });
+        return;
+      }
+      // const ticker = 'NVDA';
+      // const easternDate = DateTime.fromObject({ year: 2025, month: 6, day: 13 }, { zone: 'America/New_York' });
+      // const date = easternDate.toJSDate();
+      // console.log(date);
+      const queryOptions: any = { 
+        lang: 'en-US',
+        formatted: false,
+        region: 'US',
+      };
+
+      if (typeof date === 'string' && date.trim()) {
+        queryOptions.date = date;
+      }
+
+      // Pass the date directly to yahooFinance.options
+      const optionChain = await yahooFinance.options(ticker, queryOptions);
+
+      res.status(200).json({
+        success: true,
+        message: `Options data for ${ticker}`,
+        data: optionChain
+      });
+
+    } catch (error) {
+      console.error('Error in testYf:', error);
+      res.status(500).json({
+        success: false,
+        message: 'Failed to fetch options data from Yahoo Finance',
+        error: (error as any).message,
+      });
+    }
+  }
+
+
   
   private validateInput(data: OptionInputData): boolean {
     // Check that all inputs are valid numbers

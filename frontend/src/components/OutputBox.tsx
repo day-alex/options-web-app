@@ -23,7 +23,7 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
             {response.success ? (
                 <div className="flex flex-row border border-white divide-x divide-white rounded overflow-hidden">
                     <div className="w-1/3 p-4">
-                        <h2 className="text-white font-semibold mb-2">Parameters</h2>
+                        <h2 className="text-indigo-500 font-semibold mb-2">Parameters</h2>
                         <ul className="text-sm text-white space-y-1">
                             <li>Spot Price: {response.data.input.spot}</li>
                             <li>Strike Price: {response.data.input.strike}</li>
