@@ -3,6 +3,8 @@ interface ServerResponse {
     message: string;
     data ?: any;
     ticker: string;
+    selectedCallValue?: number | null;
+    selectedPutValue?: number | null;
 }
 
 interface OutputBoxProps {
@@ -35,10 +37,16 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
                     <div className="w-1/3 p-2 text-white text-center">
                         <h2 className="text-green-400 font-semibold my-2">Call</h2>
                         <p id="callPrice" className="text-xl font-bold">{response.data.results.callPrice.toFixed(4)}</p>
+                        <p className="text-sm text-green-300 mt-1">
+                            YF: {response.selectedCallValue != null ? response.selectedCallValue.toFixed(2) : 'n/a'}
+                        </p>
                     </div>
                     <div className="w-1/3 p-2 text-white text-center">
                         <h2 className="text-red-400 font-semibold my-2">Put</h2>
                         <p id="putPrice" className="text-xl font-bold">{response.data.results.putPrice.toFixed(4)}</p>
+                        <p className="text-sm text-red-300 mt-1">
+                            YF: {response.selectedPutValue != null ? response.selectedPutValue.toFixed(2) : 'n/a'}
+                        </p>
                     </div>
                 </div>
             ) : (

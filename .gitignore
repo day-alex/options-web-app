@@ -34,3 +34,6 @@ coverage/
 # === Misc ===
 *.tgz
 *.gz
+
+python-backend/options-venv/
+python-backend/__pycache__/

@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import { formatDate, daysUntilToday } from '@/utils/helpers';
+import axios from 'axios';
 
 interface OptionsInputFormData {
   spot: string;
@@ -25,39 +27,48 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
   const [status, setStatus] = useState<string | null>(null);
   const [optionExpirations, setOptionExpirations] = useState<string[]>([]);
   const [optionStrikes, setOptionStrikes] = useState<string[]>([]);
+  const [callValue, setCallValue] = useState<number | null>(null);
+  const [putValue, setPutValue] = useState<number | null>(null);
+  const [strikeMap, setStrikeMap] = useState<{ [strike: string]: number }>({});
+  const [putMap, setPutMap] = useState<{ [strike: string]: number }>({});
 
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData(prev => ({ ...prev, [name]: value }));
 
     if (name === 'exp') {
       getTickerStrikes(value);
     }
+
+    if (name === 'strike') {
+      setCallValue(strikeMap[value] || null);
+      setPutValue(putMap[value] || null);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    console.log(formData);
     e.preventDefault();
     setIsSubmitting(true);
     
+    formData.exp = daysUntilToday(formData.exp).toString();
     try {
-      const grpcResponse = await fetch('http://localhost:3001/api/submit', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData)
+      const { data } = await axios.post('http://localhost:3001/api/submit', formData);
+
+      setStatus('success');
+      setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
+      setTicker('');
+
+      onSubmitSuccess({
+        ...data,
+        ticker,
+        selectedCallValue: callValue,
+        selectedPutValue: putValue,
       });
 
-      const grpcData = await grpcResponse.json();
-
-      if (grpcResponse.ok) {
-        setStatus('success');
-        setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
-        onSubmitSuccess({...grpcData, ticker });
-        setTicker('');
-      } else {
-        setStatus('error');
-      }
     } catch (error) {
+      console.error('Submit error:', error);
       setStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -66,19 +77,13 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
 
   const getTickerExpirations = async () => {
     try {
-      const params = new URLSearchParams({ ticker });
-
-      const response = await fetch(`http://localhost:3001/api/options/ticker?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+      const { data } = await axios.get('http://localhost:8000/options/expirations', {
+        params: { ticker },
       });
 
-      const responseData = await response.json();
-
-      if (Array.isArray(responseData.data.expirationDates)) {
-        setOptionExpirations(responseData.data.expirationDates);
+      if (Array.isArray(data.expirations)) {
+        setOptionExpirations(data.expirations);
       }
-
     } catch (error) {
       console.error('Error fetching ticker data:', error);
     }
@@ -86,25 +91,26 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
 
   const getTickerStrikes = async (expiration: string) => {
     try {
-      const params = new URLSearchParams({ ticker, expiration });
-
-      const response = await fetch(`http://localhost:3001/api/options/ticker?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' },
+      const { data } = await axios.get('http://localhost:8000/options/lasts', {
+        params: { ticker, expiration },
       });
 
-      const responseData = await response.json();
-      setOptionStrikes(responseData.data.strikes);
+      const strikeMap = data.calls[expiration] || {};
+      const putMap = data.puts[expiration] || {};
 
+      setOptionStrikes(Object.keys(strikeMap));
+      setStrikeMap(strikeMap);
+      setPutMap(putMap);
     } catch (error) {
-      console.error('Error fetching ticker data:', error);
+      console.error('Error fetching strike data:', error);
     }
-  }
-  
+  };
+
   return (
     <form onSubmit={handleSubmit} className="max-w-md">
       {status === 'success' && <p className="text-green-600 mb-4">Form submitted successfully!</p>}
       {status === 'error' && <p className="text-red-600 mb-4">Failed to submit form. Please try again.</p>}
+
       <div className="mb-4">
         <label htmlFor="tick" className="block mb-1">Ticker</label>
         <input
@@ -117,7 +123,8 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
-      <button className='bg-blue-500 text-white py-2 px-4 rounded mb-2' type='button' onClick={getTickerExpirations}>
+
+      <button className="bg-blue-500 text-white py-2 px-4 rounded mb-2" type="button" onClick={getTickerExpirations}>
         Load Ticker Data
       </button>
 
@@ -133,7 +140,7 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
-    
+
       <div className="mb-4">
         <label htmlFor="exp" className="block mb-1">Expiration</label>
         <select
@@ -144,10 +151,10 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           className="w-full border p-2 rounded"
           disabled={optionExpirations.length === 0}
         >
-          <option value="">Select an expiration</option>
-          {optionExpirations?.map((exp: string) => (
-            <option key={exp} value={exp}>
-              {exp}
+          <option value="" className="text-black">Select an expiration</option>
+          {optionExpirations.map((exp) => (
+            <option className="text-black" key={exp} value={exp}>
+              {formatDate(exp)}
             </option>
           ))}
         </select>
@@ -161,18 +168,17 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           value={formData.strike}
           onChange={handleChange}
           className="w-full border p-2 rounded"
-          disabled={!optionStrikes || optionStrikes.length === 0}
+          disabled={optionStrikes.length === 0}
         >
-          <option value="">Select a strike</option>
-          {optionStrikes?.map((strike: string) => (
-            <option key={strike} value={strike}>
+          <option value="" className="text-black">Select a strike</option>
+          {optionStrikes.map((strike) => (
+            <option className="text-black" key={strike} value={strike}>
               {strike}
             </option>
           ))}
         </select>
       </div>
-      
-      
+
       <div className="mb-4">
         <label htmlFor="rate" className="block mb-1">Risk-free Interest Rate</label>
         <input
@@ -185,11 +191,11 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
-      
+
       <div className="mb-4">
         <label htmlFor="vol" className="block mb-1">Vol</label>
         <input
-          type='text'
+          type="text"
           id="vol"
           name="vol"
           value={formData.vol}
@@ -198,9 +204,9 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           required
         />
       </div>
-      
-      <button 
-        type="submit" 
+
+      <button
+        type="submit"
         className="bg-blue-500 text-white py-2 px-4 rounded"
         disabled={isSubmitting}
       >

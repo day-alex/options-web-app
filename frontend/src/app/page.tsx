@@ -8,6 +8,8 @@ interface ServerResponse {
     message: string;
     data ?: any;
     ticker: string;
+    selectedCallValue?: number | null;
+    selectedPutValue?: number | null;
 }
 
 export default function Home() {
@@ -32,7 +34,7 @@ export default function Home() {
           <h2 className="text-xl mb-4 border-b-4 border-indigo-500">Server Responses</h2>
           <div className="w-full space-y-4">
             {serverResponses.map((response, index) => (
-              <OutputBox key={index} response={response} />
+              <OutputBox key={index} response={response}/>
             ))}
           </div>
         </div>

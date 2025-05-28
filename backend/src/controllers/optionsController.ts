@@ -45,13 +45,12 @@ export class OptionsController {
 
   public yfOption = async (req: Request, res: Response): Promise<void> => {
     try {
-      const { ticker, date } = req.query;
-
-      if (typeof ticker !== 'string' || !ticker.trim()) {
-        res.status(400).json({ success: false, message: 'Invalid ticker symbol' });
-        return;
-      }
-      // const ticker = 'NVDA';
+      // const { ticker, expiration } = req.query;
+      // if (typeof ticker !== 'string' || !ticker.trim()) {
+      //   res.status(400).json({ success: false, message: 'Invalid ticker symbol' });
+      //   return;
+      // }
+      const ticker = 'NVDA';
       // const easternDate = DateTime.fromObject({ year: 2025, month: 6, day: 13 }, { zone: 'America/New_York' });
       // const date = easternDate.toJSDate();
       // console.log(date);
@@ -59,12 +58,12 @@ export class OptionsController {
         lang: 'en-US',
         formatted: false,
         region: 'US',
+        date: new Date("2025-05-30")
       };
 
-      if (typeof date === 'string' && date.trim()) {
-        queryOptions.date = date;
-      }
-
+      // if (typeof date === 'string' && date.trim()) {
+      // }
+      console.log(queryOptions.date);
       // Pass the date directly to yahooFinance.options
       const optionChain = await yahooFinance.options(ticker, queryOptions);
 
