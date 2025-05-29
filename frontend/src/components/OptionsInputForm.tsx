@@ -54,7 +54,7 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     
     formData.exp = daysUntilToday(formData.exp).toString();
     try {
-      const { data } = await axios.post('http://localhost:3001/api/submit', formData);
+      const { data } = await axios.post('http://localhost:8000/options/calculate', formData);
 
       setStatus('success');
       setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });

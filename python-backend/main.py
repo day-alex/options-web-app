@@ -1,8 +1,9 @@
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-import yfinance as yf
 from datetime import datetime
+from models import OptionInputData
+from services.options_services import calculate_option_prices
 from fastapi.middleware.cors import CORSMiddleware
+import yfinance as yf
 import math
 
 app = FastAPI()
@@ -68,3 +69,25 @@ async def yf_option(ticker: str):
         return { "expirations" : exps }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@app.post("/options/calculate")
+async def calculate_options(input_data: OptionInputData):
+    try:
+        result = calculate_option_prices(input_data.model_dump())
+        print(type(result), result)
+        return {
+            "success": True,
+            "message": "Options calculated successfully",
+            "data": {
+                "results": {
+                    "callPrice": result.c,
+                    "putPrice": result.p
+                },
+                "input": input_data
+            }
+        }
+
+    except Exception as e:
+        print("Error calculating options:", e)
+        raise HTTPException(status_code=500, detail="Server error processing options data")
