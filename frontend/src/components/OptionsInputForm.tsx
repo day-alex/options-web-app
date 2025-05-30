@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { formatDate, daysUntilToday } from '@/utils/helpers';
 import axios from 'axios';
-import { Button } from 'rsuite';
+import { Input, InputGroup, Button } from 'rsuite';
+import SearchIcon from '@rsuite/icons/Search'
 
 interface OptionsInputFormData {
   spot: string;
@@ -60,6 +61,12 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
       setStatus('success');
       setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
       setTicker('');
+      setOptionExpirations([]);
+      setOptionStrikes([]);
+      setCallValue(null);
+      setPutValue(null);
+      setStrikeMap({});
+      setPutMap({});
 
       onSubmitSuccess({
         ...data,
@@ -107,27 +114,37 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
     }
   };
 
+  const formIsValid =
+    ticker.trim() !== '' &&
+    formData.spot.trim() !== '' &&
+    formData.strike.trim() !== '' &&
+    formData.exp.trim() !== '' &&
+    formData.rate.trim() !== '' &&
+    formData.vol.trim() !== '';
+
   return (
-    <form onSubmit={handleSubmit} className="max-w-md">
-      {status === 'success' && <p className="text-green-600 mb-4">Form submitted successfully!</p>}
-      {status === 'error' && <p className="text-red-600 mb-4">Failed to submit form. Please try again.</p>}
+    <form onSubmit={handleSubmit} className="max-w-md p-3 mt-2">
+      {status === 'error' && <p className="text-red-600 mb-4">Failed to submit. Please try again.</p>}
 
       <div className="mb-4">
-        <label htmlFor="tick" className="block mb-1">Ticker</label>
-        <input
-          type="text"
-          id="tick"
-          name="tick"
-          value={ticker}
-          onChange={(e) => setTicker(e.target.value)}
-          className="w-full border p-2 rounded"
-          required
-        />
+        <InputGroup inside>
+          <Input
+            className='!bg-black !rounded-r-none !text-white'
+            placeholder="Enter a ticker"
+            value={ticker}
+            onChange={(value) => setTicker(value)}
+            required
+          />
+          <InputGroup.Button 
+            onClick={getTickerExpirations}
+            className={`${ticker.trim() ? '!bg-blue-400 !text-white' : '!bg-gray-600 text-gray-500 cursor-not-allowed'}`}
+            disabled={!ticker.trim()}
+          >
+            <SearchIcon />
+          </InputGroup.Button>
+        </InputGroup>
+        <div className='flex justify-center text-xs text-gray-500'>Search ticker to fetch expirations</div>
       </div>
-
-      <button className="bg-blue-500 text-white py-2 px-4 rounded mb-2" type="button" onClick={getTickerExpirations}>
-        Load Ticker Data
-      </button>
 
       <div className="mb-4">
         <label htmlFor="spot" className="block mb-1">Spot Price</label>
@@ -137,7 +154,8 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           name="spot"
           value={formData.spot}
           onChange={handleChange}
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          disabled={optionExpirations.length === 0}
           required
         />
       </div>
@@ -149,8 +167,9 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           name="exp"
           value={formData.exp}
           onChange={handleChange}
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={optionExpirations.length === 0}
+          required
         >
           <option value="" className="text-black">Select an expiration</option>
           {optionExpirations.map((exp) => (
@@ -168,8 +187,9 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
           name="strike"
           value={formData.strike}
           onChange={handleChange}
-          className="w-full border p-2 rounded"
+          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
           disabled={optionStrikes.length === 0}
+          required
         >
           <option value="" className="text-black">Select a strike</option>
           {optionStrikes.map((strike) => (
@@ -206,13 +226,13 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
         />
       </div>
 
-      <button
+      <Button block
         type="submit"
-        className="bg-blue-500 text-white py-2 px-4 rounded"
-        disabled={isSubmitting}
+        className="!bg-green-500 !text-black py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+        disabled={!formIsValid || isSubmitting}
       >
         {isSubmitting ? 'Submitting...' : 'Submit'}
-      </button>
+      </Button>
     </form>
   );
 };
