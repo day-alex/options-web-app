@@ -5,6 +5,8 @@ from services.options_services import calculate_option_prices
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import math
+import json
+from pathlib import Path
 
 app = FastAPI()
 
@@ -15,7 +17,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
 
 def safe_serialize(obj):
     if isinstance(obj, dict):
@@ -32,9 +33,20 @@ def safe_serialize(obj):
         return obj
     return obj
 
+def load_tickers():
+    tickers_file = Path("data/sp500_tickers.json")
+    with open(tickers_file, 'r') as f:
+        return json.load(f)
+
+TICKERS_CACHE = load_tickers()
+
 @app.get("/")
 async def root():
     return {"message":"Hello World!"}
+
+@app.get("/tickers/all")
+async def get_all_tickers():
+    return {"tickers": TICKERS_CACHE}
 
 @app.get("/options/lasts")
 async def yf_option(ticker: str, expiration: str):
@@ -69,6 +81,12 @@ async def yf_option(ticker: str):
         return { "expirations" : exps }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    
+@app.get("/ticker/price")
+async def get_ticker_price(ticker: str):
+    stock = yf.Ticker(ticker)
+    return {"last_price": stock.fast_info.last_price}
+
     
 
 @app.post("/options/calculate")

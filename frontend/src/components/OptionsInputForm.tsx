@@ -1,11 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { formatDate, daysUntilToday } from '@/utils/helpers';
 import axios from 'axios';
-import { Input, InputGroup, Button } from 'rsuite';
-import SearchIcon from '@rsuite/icons/Search'
+import {
+  InputNumber,
+  Button,
+  Form,
+  SelectPicker,
+  Message,
+  AutoComplete
+} from 'rsuite';
 
 interface OptionsInputFormData {
-  spot: string;
+  spot: number;
   strike: string;
   exp: string;
   rate: string;
@@ -16,17 +22,28 @@ interface OptionsInputFormProps {
   onSubmitSuccess: (data: any) => void;
 }
 
+interface TickerOption {
+  symbol: string;
+  name: string;
+}
+
 const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) => {
-  const [ticker, setTicker] = useState<string>('');
-  const [formData, setFormData] = useState<OptionsInputFormData>({
-    spot: '',
+  const [ticker, setTicker] = useState('');
+  const [tickerInputValue, setTickerInputValue] = useState('');
+  const [formValue, setFormValue] = useState<OptionsInputFormData>({
+    spot: 0,
     strike: '',
     exp: '',
     rate: '0.045',
     vol: ''
   });
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [status, setStatus] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [status, setStatus] = useState<'success' | 'error' | null>(null);
+
+  // Ticker autocomplete state
+  const [allTickers, setAllTickers] = useState<{ label: string; value: string }[]>([]);
+  const [isLoadingTickers, setIsLoadingTickers] = useState(false);
+
   const [optionExpirations, setOptionExpirations] = useState<string[]>([]);
   const [optionStrikes, setOptionStrikes] = useState<string[]>([]);
   const [callValue, setCallValue] = useState<number | null>(null);
@@ -34,32 +51,79 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
   const [strikeMap, setStrikeMap] = useState<{ [strike: string]: number }>({});
   const [putMap, setPutMap] = useState<{ [strike: string]: number }>({});
 
+  // Load all S&P 500 tickers on component mount
+  useEffect(() => {
+    const loadAllTickers = async () => {
+      setIsLoadingTickers(true);
+      try {
+        const response = await axios.get('http://localhost:8000/tickers/all');
+        const tickerOptions = response.data.tickers.map((ticker: TickerOption) => ({
+          label: `${ticker.symbol} - ${ticker.name}`,
+          value: ticker.symbol
+        }));
+        setAllTickers(tickerOptions);
+      } catch (error) {
+        console.error('Error loading tickers:', error);
+      } finally {
+        setIsLoadingTickers(false);
+      }
+    };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    loadAllTickers();
+  }, []);
 
-    if (name === 'exp') {
-      getTickerStrikes(value);
-    }
+  const getTickerExpirations = async (selectedTicker?: string) => {
+    const tickerToUse = selectedTicker || ticker;
+    if (!tickerToUse.trim()) return;
 
-    if (name === 'strike') {
-      setCallValue(strikeMap[value] || null);
-      setPutValue(putMap[value] || null);
+    try {
+      const { data } = await axios.get('http://localhost:8000/options/expirations', {
+        params: { ticker: tickerToUse }
+      });
+      if (Array.isArray(data.expirations)) {
+        setOptionExpirations(data.expirations);
+      }
+    } catch (err) {
+      console.error('Error fetching expirations:', err);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    console.log(formData);
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    formData.exp = daysUntilToday(formData.exp).toString();
+  const getTickerStrikes = async (expiration: string) => {
     try {
-      const { data } = await axios.post('http://localhost:8000/options/calculate', formData);
+      const { data } = await axios.get('http://localhost:8000/options/lasts', {
+        params: { ticker, expiration }
+      });
+      const strikeMap = data.calls[expiration] || {};
+      const putMap = data.puts[expiration] || {};
+      setOptionStrikes(Object.keys(strikeMap));
+      setStrikeMap(strikeMap);
+      setPutMap(putMap);
+    } catch (err) {
+      console.error('Error fetching strikes:', err);
+    }
+  };
+
+  const handleTickerSelect = async (value: string) => {
+    setTicker(value);
+    // Auto-fetch expirations when ticker is selected
+    const { data } = await axios.get('http://localhost:8000/ticker/price', {
+      params: { ticker: value }
+    });
+    setFormValue({spot: data.last_price, strike: '', exp: '', rate: '0.045', vol: ''})
+    getTickerExpirations(value);
+  };
+
+  const handleSubmit = async () => {
+    setIsSubmitting(true);
+    try {
+      const payload = {
+        ...formValue,
+        exp: daysUntilToday(formValue.exp).toString()
+      };
+      const { data } = await axios.post('http://localhost:8000/options/calculate', payload);
 
       setStatus('success');
-      setFormData({ spot: '', strike: '', exp: '', rate: '', vol: '' });
+      setFormValue({ spot: 0, strike: '', exp: '', rate: '0.045', vol: '' });
       setTicker('');
       setOptionExpirations([]);
       setOptionStrikes([]);
@@ -72,168 +136,151 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
         ...data,
         ticker,
         selectedCallValue: callValue,
-        selectedPutValue: putValue,
+        selectedPutValue: putValue
       });
-
-    } catch (error) {
-      console.error('Submit error:', error);
+    } catch (err) {
+      console.error('Submit error:', err);
       setStatus('error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const getTickerExpirations = async () => {
-    try {
-      const { data } = await axios.get('http://localhost:8000/options/expirations', {
-        params: { ticker },
-      });
-
-      if (Array.isArray(data.expirations)) {
-        setOptionExpirations(data.expirations);
+  const handleTickerKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter') {
+      const ticker = tickerInputValue.trim().toUpperCase();
+      if (ticker) {
+        handleTickerSelect(ticker);
       }
-    } catch (error) {
-      console.error('Error fetching ticker data:', error);
     }
   };
 
-  const getTickerStrikes = async (expiration: string) => {
-    try {
-      const { data } = await axios.get('http://localhost:8000/options/lasts', {
-        params: { ticker, expiration },
-      });
-
-      const strikeMap = data.calls[expiration] || {};
-      const putMap = data.puts[expiration] || {};
-
-      setOptionStrikes(Object.keys(strikeMap));
-      setStrikeMap(strikeMap);
-      setPutMap(putMap);
-    } catch (error) {
-      console.error('Error fetching strike data:', error);
-    }
-  };
-
-  const formIsValid =
-    ticker.trim() !== '' &&
-    formData.spot.trim() !== '' &&
-    formData.strike.trim() !== '' &&
-    formData.exp.trim() !== '' &&
-    formData.rate.trim() !== '' &&
-    formData.vol.trim() !== '';
 
   return (
-    <form onSubmit={handleSubmit} className="max-w-md p-3 mt-2">
-      {status === 'error' && <p className="text-red-600 mb-4">Failed to submit. Please try again.</p>}
+    <Form
+      fluid
+      formValue={formValue}
+      onChange={(val) => setFormValue(val as OptionsInputFormData)}
+      onSubmit={handleSubmit}
+      className="max-w-md p-3 mt-2"
+    >
+      {status === 'error' && (
+        <Message type="error" showIcon>
+          Failed to submit. Please try again.
+        </Message>
+      )}
 
-      <div className="mb-4">
-        <InputGroup inside>
-          <Input
-            className='!bg-black !rounded-r-none !text-white'
-            placeholder="Enter a ticker"
-            value={ticker}
-            onChange={(value) => setTicker(value)}
-            required
-          />
-          <InputGroup.Button 
-            onClick={getTickerExpirations}
-            className={`${ticker.trim() ? '!bg-blue-400 !text-white' : '!bg-gray-600 text-gray-500 cursor-not-allowed'}`}
-            disabled={!ticker.trim()}
-          >
-            <SearchIcon />
-          </InputGroup.Button>
-        </InputGroup>
-        <div className='flex justify-center text-xs text-gray-500'>Search ticker to fetch expirations</div>
-      </div>
+      {/* Ticker autocomplete */}
+      <Form.Group>
+        <Form.ControlLabel>Ticker Symbol</Form.ControlLabel>
+        <AutoComplete
+          data={allTickers}
+          value={tickerInputValue}
+          onChange={setTickerInputValue}
+          onSelect={(val) => {
+            setTicker(val);
+            setTickerInputValue(val); // sync input text after selection
+            handleTickerSelect(val);
+          }}
+          onKeyDown={handleTickerKeyDown}
+          selectOnEnter
+          placeholder={isLoadingTickers ? "Loading tickers..." : "Search S&P 500 tickers..."}
+          disabled={isLoadingTickers}
+          filterBy={(value, item) =>
+            String(item.value).toLowerCase().includes(value.toLowerCase()) ||
+            String(item.label).toLowerCase().includes(value.toLowerCase())
+          }
+          style={{ width: '100%' }}
+        />
 
-      <div className="mb-4">
-        <label htmlFor="spot" className="block mb-1">Spot Price</label>
-        <input
-          type="text"
-          id="spot"
+        <Form.HelpText>
+          {isLoadingTickers 
+            ? "Loading S&P 500 tickers..." 
+            : "Search by ticker symbol or company name"
+          }
+        </Form.HelpText>
+      </Form.Group>
+
+      {/* Spot price */}
+      <Form.Group controlId="spot">
+        <Form.ControlLabel>Spot Price</Form.ControlLabel>
+        <Form.Control
           name="spot"
-          value={formData.spot}
-          onChange={handleChange}
-          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          accepter={InputNumber}
+          step={0.05}
           disabled={optionExpirations.length === 0}
-          required
         />
-      </div>
+      </Form.Group>
 
-      <div className="mb-4">
-        <label htmlFor="exp" className="block mb-1">Expiration</label>
-        <select
-          id="exp"
+      {/* Expiration */}
+      <Form.Group controlId="exp">
+        <Form.ControlLabel>Expiration</Form.ControlLabel>
+        <Form.Control
           name="exp"
-          value={formData.exp}
-          onChange={handleChange}
-          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          accepter={SelectPicker}
+          searchable={false}
+          data={optionExpirations.map(exp => ({
+            label: `${formatDate(exp)} | ${Math.round(
+              daysUntilToday(exp) * 365
+            )}d`,
+            value: exp
+          }))}
+          onChange={val => {
+            if (val) getTickerStrikes(val);
+          }}
           disabled={optionExpirations.length === 0}
-          required
-        >
-          <option value="" className="text-black">Select an expiration</option>
-          {optionExpirations.map((exp) => (
-            <option className="text-black" key={exp} value={exp}>
-              {formatDate(exp)}
-            </option>
-          ))}
-        </select>
-      </div>
+          style={{ width: '100%' }}
+        />
+      </Form.Group>
 
-      <div className="mb-4">
-        <label htmlFor="strike" className="block mb-1">Strike Price</label>
-        <select
-          id="strike"
+      {/* Strike */}
+      <Form.Group controlId="strike">
+        <Form.ControlLabel>Strike Price</Form.ControlLabel>
+        <Form.Control
           name="strike"
-          value={formData.strike}
-          onChange={handleChange}
-          className="w-full border p-2 rounded bg-black text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          accepter={SelectPicker}
+          searchable={false}
+          data={optionStrikes.map(s => ({ label: s, value: s }))}
+          onChange={val => {
+            if (val) {
+              setCallValue(strikeMap[val] || null);
+              setPutValue(putMap[val] || null);
+            }
+          }}
           disabled={optionStrikes.length === 0}
-          required
-        >
-          <option value="" className="text-black">Select a strike</option>
-          {optionStrikes.map((strike) => (
-            <option className="text-black" key={strike} value={strike}>
-              {strike}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mb-4">
-        <label htmlFor="rate" className="block mb-1">Risk-free Interest Rate</label>
-        <input
-          type="text"
-          id="rate"
-          name="rate"
-          value={formData.rate}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
+          style={{ width: '100%' }}
         />
-      </div>
+      </Form.Group>
 
-      <div className="mb-4">
-        <label htmlFor="vol" className="block mb-1">Vol</label>
-        <input
-          type="text"
-          id="vol"
-          name="vol"
-          value={formData.vol}
-          onChange={handleChange}
-          className="w-full border p-2 rounded"
-          required
-        />
-      </div>
+      {/* Rate */}
+      <Form.Group controlId="rate">
+        <Form.ControlLabel>Risk-free Interest Rate</Form.ControlLabel>
+        <Form.Control name="rate" />
+      </Form.Group>
 
-      <Button block
+      {/* Vol */}
+      <Form.Group controlId="vol">
+        <Form.ControlLabel>Volatility</Form.ControlLabel>
+        <Form.Control name="vol" />
+      </Form.Group>
+
+      <Button
+        appearance="primary"
         type="submit"
-        className="!bg-green-500 !text-black py-2 px-4 rounded disabled:opacity-50 disabled:cursor-not-allowed"
-        disabled={!formIsValid || isSubmitting}
+        block
+        loading={isSubmitting}
+        disabled={
+          !ticker ||
+          !formValue.spot ||
+          !formValue.exp ||
+          !formValue.strike ||
+          !formValue.rate ||
+          !formValue.vol
+        }
       >
-        {isSubmitting ? 'Submitting...' : 'Submit'}
+        Submit
       </Button>
-    </form>
+    </Form>
   );
 };
 

@@ -30,9 +30,9 @@ export default function Home() {
           </div>
         </div>
         
-        <div className="md:w-1/2 mt-8 md:mt-0">
+        <div className="md:w-1/2 mt-8 md:mt-0 overflow-y-auto">
           <h5 className="text-xl mb-4 border-b-4 border-indigo-500">Server Responses</h5>
-          <div className="w-full space-y-4">
+          <div className="w-full space-y-4 h-96 max-h-full">
             {serverResponses.map((response, index) => (
               <OutputBox key={index} response={response}/>
             ))}
