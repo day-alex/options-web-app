@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from generated import options_pb2 as options__pb2
+import options_pb2 as options__pb2
 
 GRPC_GENERATED_VERSION = '1.71.0'
 GRPC_VERSION = grpc.__version__
@@ -39,12 +39,23 @@ class OptionsStub(object):
                 request_serializer=options__pb2.OptionInputs.SerializeToString,
                 response_deserializer=options__pb2.OptionPrices.FromString,
                 _registered_method=True)
+        self.MonteCarlo = channel.unary_unary(
+                '/Options/MonteCarlo',
+                request_serializer=options__pb2.MonteCarloInputs.SerializeToString,
+                response_deserializer=options__pb2.MonteCarloResult.FromString,
+                _registered_method=True)
 
 
 class OptionsServicer(object):
     """Missing associated documentation comment in .proto file."""
 
     def BlackScholes(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def MonteCarlo(self, request, context):
         """Missing associated documentation comment in .proto file."""
         context.set_code(grpc.StatusCode.UNIMPLEMENTED)
         context.set_details('Method not implemented!')
@@ -57,6 +68,11 @@ def add_OptionsServicer_to_server(servicer, server):
                     servicer.BlackScholes,
                     request_deserializer=options__pb2.OptionInputs.FromString,
                     response_serializer=options__pb2.OptionPrices.SerializeToString,
+            ),
+            'MonteCarlo': grpc.unary_unary_rpc_method_handler(
+                    servicer.MonteCarlo,
+                    request_deserializer=options__pb2.MonteCarloInputs.FromString,
+                    response_serializer=options__pb2.MonteCarloResult.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -86,6 +102,33 @@ class Options(object):
             '/Options/BlackScholes',
             options__pb2.OptionInputs.SerializeToString,
             options__pb2.OptionPrices.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def MonteCarlo(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Options/MonteCarlo',
+            options__pb2.MonteCarloInputs.SerializeToString,
+            options__pb2.MonteCarloResult.FromString,
             options,
             channel_credentials,
             insecure,

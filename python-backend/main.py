@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from datetime import datetime
-from models import OptionInputData
-from services.options_services import calculate_option_prices
+from models import OptionInputData, MonteCarloInputData
+from services.options_services import calculate_option_prices, calculate_monte_carlo
 from fastapi.middleware.cors import CORSMiddleware
 import yfinance as yf
 import math
@@ -109,3 +109,38 @@ async def calculate_options(input_data: OptionInputData):
     except Exception as e:
         print("Error calculating options:", e)
         raise HTTPException(status_code=500, detail="Server error processing options data")
+
+
+@app.post("/options/monte-carlo")
+async def monte_carlo_options(input_data: MonteCarloInputData):
+    try:
+        result = calculate_monte_carlo(input_data.model_dump())
+
+        # Reshape flat path_data into 2D list: paths[i] = prices at each step
+        paths = []
+        if result.num_vis_paths > 0 and result.num_steps > 0:
+            row_len = result.num_steps + 1
+            flat = list(result.path_data)
+            for i in range(result.num_vis_paths):
+                paths.append(flat[i * row_len : (i + 1) * row_len])
+
+        return {
+            "success": True,
+            "message": "Monte Carlo simulation completed",
+            "data": {
+                "results": {
+                    "callPrice": result.call_price,
+                    "putPrice": result.put_price,
+                    "callStdError": result.call_std_error,
+                    "putStdError": result.put_std_error,
+                    "numPaths": result.num_paths,
+                    "paths": paths,
+                    "numVisualPaths": result.num_vis_paths,
+                    "numSteps": result.num_steps,
+                },
+                "input": input_data
+            }
+        }
+    except Exception as e:
+        print("Error in Monte Carlo:", e)
+        raise HTTPException(status_code=500, detail="Server error processing Monte Carlo simulation")

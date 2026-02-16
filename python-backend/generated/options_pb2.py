@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\roptions.proto\"E\n\x0cOptionInputs\x12\t\n\x01S\x18\x01 \x01(\x01\x12\t\n\x01K\x18\x02 \x01(\x01\x12\t\n\x01T\x18\x03 \x01(\x01\x12\t\n\x01R\x18\x04 \x01(\x01\x12\t\n\x01V\x18\x05 \x01(\x01\"$\n\x0cOptionPrices\x12\t\n\x01\x63\x18\x01 \x01(\x01\x12\t\n\x01p\x18\x02 \x01(\x01\x32\x37\n\x07Options\x12,\n\x0c\x42lackScholes\x12\r.OptionInputs\x1a\r.OptionPricesb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\roptions.proto\"E\n\x0cOptionInputs\x12\t\n\x01S\x18\x01 \x01(\x01\x12\t\n\x01K\x18\x02 \x01(\x01\x12\t\n\x01T\x18\x03 \x01(\x01\x12\t\n\x01R\x18\x04 \x01(\x01\x12\t\n\x01V\x18\x05 \x01(\x01\"$\n\x0cOptionPrices\x12\t\n\x01\x63\x18\x01 \x01(\x01\x12\t\n\x01p\x18\x02 \x01(\x01\"\x86\x01\n\x10MonteCarloInputs\x12\t\n\x01S\x18\x01 \x01(\x01\x12\t\n\x01K\x18\x02 \x01(\x01\x12\t\n\x01T\x18\x03 \x01(\x01\x12\t\n\x01R\x18\x04 \x01(\x01\x12\t\n\x01V\x18\x05 \x01(\x01\x12\x11\n\tnum_paths\x18\x06 \x01(\x05\x12\x11\n\tnum_steps\x18\x07 \x01(\x05\x12\x15\n\rnum_vis_paths\x18\x08 \x01(\x05\"\xb8\x01\n\x10MonteCarloResult\x12\x12\n\ncall_price\x18\x01 \x01(\x01\x12\x11\n\tput_price\x18\x02 \x01(\x01\x12\x16\n\x0e\x63\x61ll_std_error\x18\x03 \x01(\x01\x12\x15\n\rput_std_error\x18\x04 \x01(\x01\x12\x11\n\tnum_paths\x18\x05 \x01(\x05\x12\x11\n\tpath_data\x18\x06 \x03(\x01\x12\x15\n\rnum_vis_paths\x18\x07 \x01(\x05\x12\x11\n\tnum_steps\x18\x08 \x01(\x05\x32k\n\x07Options\x12,\n\x0c\x42lackScholes\x12\r.OptionInputs\x1a\r.OptionPrices\x12\x32\n\nMonteCarlo\x12\x11.MonteCarloInputs\x1a\x11.MonteCarloResultb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_OPTIONINPUTS']._serialized_end=86
   _globals['_OPTIONPRICES']._serialized_start=88
   _globals['_OPTIONPRICES']._serialized_end=124
-  _globals['_OPTIONS']._serialized_start=126
-  _globals['_OPTIONS']._serialized_end=181
+  _globals['_MONTECARLOINPUTS']._serialized_start=127
+  _globals['_MONTECARLOINPUTS']._serialized_end=261
+  _globals['_MONTECARLORESULT']._serialized_start=264
+  _globals['_MONTECARLORESULT']._serialized_end=448
+  _globals['_OPTIONS']._serialized_start=450
+  _globals['_OPTIONS']._serialized_end=557
 # @@protoc_insertion_point(module_scope)
