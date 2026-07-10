@@ -162,10 +162,10 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
       formValue={formValue}
       onChange={(val) => setFormValue(val as OptionsInputFormData)}
       onSubmit={handleSubmit}
-      className="max-w-md p-3 mt-2"
+      className="rounded-lg border border-border bg-surface p-5"
     >
       {status === 'error' && (
-        <Message type="error" showIcon>
+        <Message type="error" showIcon className="!mb-4">
           Failed to submit. Please try again.
         </Message>
       )}
@@ -268,6 +268,7 @@ const OptionsInputForm: React.FC<OptionsInputFormProps> = ({ onSubmitSuccess }) 
         appearance="primary"
         type="submit"
         block
+        className="!mt-2"
         loading={isSubmitting}
         disabled={
           !ticker ||

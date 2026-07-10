@@ -27,19 +27,19 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
     const hasPaths = isMC && response.data?.results?.paths?.length > 0;
 
     return (
-        <div className="mt-8 p-2 bg-black border border-gray-400 rounded">
-            <div className="flex flex-row items-center gap-1 mb-2">
-                <h4>{response.ticker}</h4>
-                <p className="text-gray-400 text-xs">
-                    {methodLabel} @ {new Date().toLocaleTimeString()}
+        <div className="rounded-lg border border-border bg-surface p-4">
+            <div className="flex flex-row items-baseline gap-2 mb-3 pb-3 border-b border-border">
+                <h4 className="font-semibold">{response.ticker}</h4>
+                <p className="text-muted text-xs">
+                    {methodLabel} &middot; {new Date().toLocaleTimeString()}
                 </p>
             </div>
             {response.success ? (
                 <>
-                    <div className="flex flex-row border border-white divide-x divide-white rounded overflow-hidden">
+                    <div className="flex flex-row border border-border divide-x divide-border rounded-md overflow-hidden">
                         <div className="w-1/3 p-4">
-                            <h5 className="!text-indigo-500 font-semibold !mb-2">Parameters</h5>
-                            <ul className="text-sm text-white space-y-1">
+                            <h5 className="text-xs font-semibold uppercase tracking-wider text-muted !mb-2">Parameters</h5>
+                            <ul className="text-sm space-y-1">
                                 <li>Spot Price: {response.data.input.spot}</li>
                                 <li>Strike Price: {response.data.input.strike}</li>
                                 <li>Exp (days): {response.data.input.exp * 365}</li>
@@ -50,34 +50,34 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
                                 )}
                             </ul>
                         </div>
-                        <div className="w-1/3 p-2 text-white text-center">
-                            <h4 className="!text-green-400 font-semibold my-2">Call</h4>
+                        <div className="w-1/3 p-4 bg-surface-alt text-center">
+                            <h5 className="text-xs font-semibold uppercase tracking-wider text-call !mb-2">Call</h5>
                             <p id="callPrice">{isMC ? 'MC' : 'BS'}: {response.data.results.callPrice.toFixed(4)}</p>
                             {isMC && response.data.results.callStdError != null && (
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-muted mt-1">
                                     +/- {response.data.results.callStdError.toFixed(4)}
                                 </p>
                             )}
-                            <p className="text-sm text-green-300 mt-1">
+                            <p className="text-sm text-muted mt-1">
                                 YF: {response.selectedCallValue != null ? response.selectedCallValue.toFixed(2) : 'n/a'}
                             </p>
                         </div>
-                        <div className="w-1/3 p-2 text-white text-center">
-                            <h4 className="!text-red-400 font-semibold my-2">Put</h4>
+                        <div className="w-1/3 p-4 bg-surface-alt text-center">
+                            <h5 className="text-xs font-semibold uppercase tracking-wider text-put !mb-2">Put</h5>
                             <p id="putPrice">{isMC ? 'MC' : 'BS'}: {response.data.results.putPrice.toFixed(4)}</p>
                             {isMC && response.data.results.putStdError != null && (
-                                <p className="text-xs text-gray-400 mt-1">
+                                <p className="text-xs text-muted mt-1">
                                     +/- {response.data.results.putStdError.toFixed(4)}
                                 </p>
                             )}
-                            <p className="text-sm text-red-300 mt-1">
+                            <p className="text-sm text-muted mt-1">
                                 YF: {response.selectedPutValue != null ? response.selectedPutValue.toFixed(2) : 'n/a'}
                             </p>
                         </div>
                     </div>
                     {hasPaths && (
                         <>
-                            <div className="mt-2 text-center">
+                            <div className="mt-3 text-center">
                                 <Button
                                     appearance="ghost"
                                     size="sm"
@@ -90,7 +90,6 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
                                 size="lg"
                                 open={showPathsModal}
                                 onClose={() => setShowPathsModal(false)}
-                                className="bg-black"
                             >
                                 <Modal.Header>
                                     <Modal.Title>
@@ -110,7 +109,7 @@ const OutputBox: React.FC<OutputBoxProps> = ({ response }) => {
                     )}
                 </>
             ) : (
-                <div className="text-red-600">
+                <div className="text-put text-sm">
                     <p className="font-semibold">Error: {response.message}</p>
                 </div>
             )}

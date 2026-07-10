@@ -17,10 +17,12 @@ interface PathsChartProps {
   strike: number;
 }
 
-const COLORS = [
-  '#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00C49F',
-  '#0088FE', '#FFBB28', '#FF8042', '#a4de6c', '#d0ed57',
-];
+const COLORS = ['#5b8cff'];
+const BORDER = '#2a2a30';
+const MUTED = '#8b8b93';
+const SURFACE = '#16161a';
+const CALL = '#34d399';
+const PUT = '#f87171';
 
 const PathsChart: React.FC<PathsChartProps> = ({ paths, numSteps, spot, strike }) => {
   const data = useMemo(() => {
@@ -53,44 +55,44 @@ const PathsChart: React.FC<PathsChartProps> = ({ paths, numSteps, spot, strike }
   }, [paths, strike]);
 
   return (
-    <div style={{ backgroundColor: '#000', padding: '10px', borderRadius: '4px' }}>
+    <div style={{ backgroundColor: SURFACE, padding: '10px', borderRadius: '8px' }}>
     <ResponsiveContainer width="100%" height={450}>
       <LineChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 10 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+        <CartesianGrid strokeDasharray="3 3" stroke={BORDER} />
         <XAxis
           dataKey="step"
-          label={{ value: 'Time Step', position: 'insideBottom', offset: -5, fill: '#ccc' }}
-          stroke="#555"
-          tick={{ fill: '#ccc', fontSize: 11 }}
+          label={{ value: 'Time Step', position: 'insideBottom', offset: -5, fill: MUTED }}
+          stroke={BORDER}
+          tick={{ fill: MUTED, fontSize: 11 }}
         />
         <YAxis
           domain={[yMin, yMax]}
-          label={{ value: 'Price', angle: -90, position: 'insideLeft', fill: '#ccc' }}
-          stroke="#555"
-          tick={{ fill: '#ccc', fontSize: 11 }}
+          label={{ value: 'Price', angle: -90, position: 'insideLeft', fill: MUTED }}
+          stroke={BORDER}
+          tick={{ fill: MUTED, fontSize: 11 }}
         />
         <ReferenceLine
           y={strike}
-          stroke="#ef4444"
+          stroke={PUT}
           strokeDasharray="6 3"
           strokeWidth={1.5}
-          label={{ value: `K=${strike}`, fill: '#ef4444', position: 'right', fontSize: 12 }}
+          label={{ value: `K=${strike}`, fill: PUT, position: 'right', fontSize: 12 }}
         />
         <ReferenceLine
           y={spot}
-          stroke="#22c55e"
+          stroke={CALL}
           strokeDasharray="6 3"
           strokeWidth={1.5}
-          label={{ value: `S=${spot}`, fill: '#22c55e', position: 'right', fontSize: 12 }}
+          label={{ value: `S=${spot}`, fill: CALL, position: 'right', fontSize: 12 }}
         />
         {paths.map((_, i) => (
           <Line
             key={i}
             type="monotone"
             dataKey={`p${i}`}
-            stroke={COLORS[i % COLORS.length]}
+            stroke={COLORS[0]}
             strokeWidth={0.7}
-            strokeOpacity={0.4}
+            strokeOpacity={0.35}
             dot={false}
             isAnimationActive={false}
           />

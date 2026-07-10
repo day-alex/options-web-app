@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { CustomProvider } from "rsuite";
 import 'rsuite/dist/rsuite.min.css';
 import "./globals.css";
 
@@ -28,7 +29,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <CustomProvider theme="dark">{children}</CustomProvider>
       </body>
     </html>
   );

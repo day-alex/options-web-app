@@ -1,26 +1,148 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #0b0b0c;
+  --foreground: #e8e8ea;
+  --surface: #16161a;
+  --surface-alt: #1e1e23;
+  --border: #2a2a30;
+  --muted: #8b8b93;
+  --accent: #5b8cff;
+  --call: #34d399;
+  --put: #f87171;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-border: var(--border);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-call: var(--call);
+  --color-put: var(--put);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #000000;
-    --foreground: #ededed;
-  }
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+/* ---------------------------------------------------------------- */
+/* rsuite ships no real dark theme (theme="dark" only recolors a    */
+/* handful of buttons/messages), so form controls are skinned here  */
+/* to match the app's neutral dark palette.                         */
+/* ---------------------------------------------------------------- */
+
+.rs-form-control-label {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.rs-form-help-text {
+  color: var(--muted);
+}
+
+.rs-input,
+.rs-picker-toggle.rs-btn,
+.rs-input-group {
+  background-color: var(--surface) !important;
+  border-color: var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+.rs-input-group:not(.rs-input-group-inside) .rs-input {
+  background-color: transparent !important;
+  border: none !important;
+}
+
+.rs-input::placeholder,
+.rs-picker-toggle-placeholder,
+.rs-picker-search-input input::placeholder {
+  color: var(--muted) !important;
+}
+
+.rs-picker-toggle-value,
+.rs-picker-toggle-caret,
+.rs-picker-search-input input {
+  color: var(--foreground) !important;
+}
+
+.rs-input-number-btn-group-vertical,
+.rs-input-group-btn {
+  background-color: var(--surface-alt) !important;
+  border-color: var(--border) !important;
+}
+
+.rs-input-number-touchspin-up,
+.rs-input-number-touchspin-down {
+  color: var(--muted) !important;
+}
+
+.rs-picker-menu,
+.rs-auto-complete-menu {
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+}
+
+.rs-picker-select-menu-item,
+.rs-auto-complete-item {
+  color: var(--foreground) !important;
+}
+
+.rs-picker-select-menu-item:hover,
+.rs-picker-select-menu-item-focus,
+.rs-auto-complete-item:hover,
+.rs-auto-complete-item-focus {
+  background-color: var(--surface-alt) !important;
+}
+
+.rs-picker-select-menu-item-active {
+  background-color: var(--surface-alt) !important;
+  color: var(--accent) !important;
+}
+
+.rs-btn-primary {
+  background-color: var(--accent) !important;
+  border-color: var(--accent) !important;
+}
+
+.rs-btn-primary:hover:not(:disabled) {
+  filter: brightness(1.1);
+}
+
+.rs-btn-ghost {
+  color: var(--foreground) !important;
+  border-color: var(--border) !important;
+}
+
+.rs-btn-ghost:hover:not(:disabled) {
+  background-color: var(--surface-alt) !important;
+}
+
+.rs-message {
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--foreground) !important;
+}
+
+.rs-message-error {
+  border-color: var(--put) !important;
+}
+
+.rs-modal-content {
+  background-color: var(--surface) !important;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.rs-modal-header-close {
+  color: var(--muted) !important;
 }
