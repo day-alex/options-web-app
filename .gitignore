@@ -36,4 +36,8 @@ coverage/
 *.gz
 
 python-backend/options-venv/
-python-backend/__pycache__/
+python-backend/venv/
+**/__pycache__/
+*.pyc
+
+/python-backend/generated/*

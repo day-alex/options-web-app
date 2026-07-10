@@ -4,7 +4,7 @@ from generated import options_pb2_grpc
 
 
 def get_option_prices(data):
-    with grpc.insecure_channel('localhost:50051') as channel:
+    with grpc.insecure_channel('192.168.1.180:50051') as channel:
         stub = options_pb2_grpc.OptionsStub(channel)
 
         request = options_pb2.OptionInputs(
